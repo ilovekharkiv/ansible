@@ -1,0 +1,6 @@
+location: /home/pavlo/Desktop/test-node-app
+linux_name: pavlo
+user_home_dir: /home/{{linux_name}}
+user_groups: "adm,docker"
+
+#docker_password: xxxx
