@@ -1,0 +1,65 @@
+---
+- name: Install python3,docker,docker-compose
+  hosts: ec2
+  become: yes
+  gather_facts: False
+  tasks:
+    - name: Make sure python3, docker and docker-compose are installed
+      vars:
+        ansible_python_interpreter: /usr/bin/python
+      yum: 
+        name: 
+          - python3
+          - docker
+        update_cache: yes
+        state: present
+    - name: Install Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: +x
+    - name: Make sure that docker is running
+      systemd:
+        name: docker
+        state: started
+    - name: Install docker python module
+      pip:
+        name: 
+          - docker
+          - docker-compose
+
+- name: Create new linux user
+  hosts: ec2
+  become: yes
+  vars_files:
+    - ansible_vars
+  tasks:
+    - name: Create new linux user
+      user:
+        name: pavlo
+        groups: "{{user_groups}}"
+   
+
+- name: Start docker containers
+  hosts: ec2
+  become: yes
+  become_user: pavlo
+  vars_files:
+    - ansible_vars
+  tasks:
+    - name: Copy docker compose file
+      copy: 
+        src: /home/pavlo/Desktop/ansible/docker-compose.yaml
+        dest: /home/pavlo
+    - name: Docker login
+      docker_login:
+        registry_url: https://index.docker.io/v1/
+        username: ilovekharkiv
+        password: "{{docker_password}}"
+    - name: Start containers via docker-compose
+      docker_compose: 
+        project_src: /home/pavlo
+        state: absent #docker compose up
+
+
+
